@@ -1,4 +1,5 @@
 import quandl
+from config.api_keys import quandl_key
 
 class IDataRetriever:
     def get_data(self):
@@ -7,7 +8,7 @@ class IDataRetriever:
 
 class QuandlDataRetriever(IDataRetriever):
     def __init__(self):
-        quandl.ApiConfig.api_key = '8_c27qYbGNuH8HAEs5ny'
+        quandl.ApiConfig.api_key = quandl_key
 
     def get_data(self, exchange='BITSTAMP', currency='USD'):
         df = quandl.get("BCHARTS/{}{}".format(exchange.upper(), currency.upper()))

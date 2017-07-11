@@ -1,19 +1,17 @@
-from dataretrievers import QuandlDataRetriever
+import math
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import math
-from stockstats import StockDataFrame
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, LSTM, Activation
-from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import mean_squared_error, confusion_matrix, accuracy_score
 from ggplot import *
-import seaborn as sns
-import matplotlib.pyplot as plt
-from transformers import WindowExtractor
-import dill
+from keras.layers import Dense, Dropout, LSTM, Activation
+from keras.models import Sequential
+from keras.wrappers.scikit_learn import KerasRegressor
+from sklearn.metrics import mean_squared_error
+from sklearn.pipeline import Pipeline
+
+from dataretrievers import QuandlDataRetriever
+from transformers.regressor_preprocessor import WindowExtractor
 
 # fix random seed for reproducibility
 np.random.seed(123456)
@@ -116,7 +114,6 @@ def plot_prediction(y, trainPredict, testPredict):
     plt.plot(trainPredictPlot)
     plt.plot(testPredictPlot)
     plt.show()
-    import time
     # plt.savefig('lstm_reg_{}.png'.format(time.time()), dpi=1000)
 
 def plot_pred_vs_actual(testY, testPredict):
