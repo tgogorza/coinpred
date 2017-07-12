@@ -1,5 +1,8 @@
 import quandl
 from config.api_keys import quandl_key
+import requests
+import pandas as pd
+import json
 
 class IDataRetriever:
     def get_data(self):
@@ -17,34 +20,34 @@ class QuandlDataRetriever(IDataRetriever):
         return df
 
 
-# class CryptoCompareRetriever(IDataRetriever):
-#
-#     exchanges = ['Bitstamp', 'Bitfinex', 'Coinbase', 'Kraken', 'Btce', 'Cexio', 'Poloniex', 'Bittrex']
-#
-#     # exchanges = ['BTCE', 'BTER', 'Bit2C', 'Bitfinex', 'Bitstamp', 'Bittrex', 'CCEDK', 'Cexio', 'Coinbase',
-#     #              'Coinfloor', 'Coinse', 'Coinsetter', 'Cryptopia', 'Cryptsy', 'Gatecoin', 'Gemini', 'HitBTC', 'Huobi',
-#     #              'itBit', 'Kraken', 'LakeBTC', 'LocalBitcoins', 'MonetaGo', 'OKCoin', 'Poloniex', 'Yacuna', 'Yunbi',
-#     #              'Yobit', 'Korbit', 'BitBay', 'BTCMarkets', 'QuadrigaCX', 'CoinCheck', 'BitSquare', 'Vaultoro',
-#     #              'MercadoBitcoin', 'Unocoin', 'Bitso', 'BTCXIndia', 'Paymium', 'TheRockTrading', 'bitFlyer', 'Quoine',
-#     #              'Luno', 'EtherDelta', 'Liqui', 'bitFlyerFX', 'BitMarket', 'LiveCoin', 'Coinone', 'Tidex', 'Bleutrade',
-#     #              'EthexIndia']
-#
-#     pairs = ['BTC/USD', 'ETH/BTC', 'ETH/USD', 'LTC/USD', 'LTC/BTC']
-#
-#     # pairs = ['BTC/USD', 'BTC/EUR', 'BTC/ETH', 'ETH/USD', 'ETH/EUR', 'LTC/USD', 'LTC/EUR', 'BTC/LTC']
-#
-#
-#     def get_data(self, from_coin, to_coin, exchange='Bitfinex', limit=10000):
-#         params = {
-#             'fsym': from_coin,
-#             'tsym': to_coin,
-#             'e': exchange,
-#             'limit': str(limit)
-#         }
-#         print 'Getting data for {} -> {}/{}...'.format(exchange, from_coin, to_coin)
-#         response = requests.get('https://min-api.cryptocompare.com/data/histoday', params)
-#         data = json.loads(response.content)['Data']
-#         df = pd.DataFrame(data)
-#         if len(df.columns) > len(df):
-#             df = df.transpose()
-#         return df
+class CryptoCompareRetriever(IDataRetriever):
+
+    def __init__(self):
+        exchanges = ['Bitstamp', 'Bitfinex', 'Coinbase', 'Kraken', 'Btce', 'Cexio', 'Poloniex', 'Bittrex']
+
+        # exchanges = ['BTCE', 'BTER', 'Bit2C', 'Bitfinex', 'Bitstamp', 'Bittrex', 'CCEDK', 'Cexio', 'Coinbase',
+        #              'Coinfloor', 'Coinse', 'Coinsetter', 'Cryptopia', 'Cryptsy', 'Gatecoin', 'Gemini', 'HitBTC', 'Huobi',
+        #              'itBit', 'Kraken', 'LakeBTC', 'LocalBitcoins', 'MonetaGo', 'OKCoin', 'Poloniex', 'Yacuna', 'Yunbi',
+        #              'Yobit', 'Korbit', 'BitBay', 'BTCMarkets', 'QuadrigaCX', 'CoinCheck', 'BitSquare', 'Vaultoro',
+        #              'MercadoBitcoin', 'Unocoin', 'Bitso', 'BTCXIndia', 'Paymium', 'TheRockTrading', 'bitFlyer', 'Quoine',
+        #              'Luno', 'EtherDelta', 'Liqui', 'bitFlyerFX', 'BitMarket', 'LiveCoin', 'Coinone', 'Tidex', 'Bleutrade',
+        #              'EthexIndia']
+
+        pairs = ['BTC/USD', 'ETH/BTC', 'ETH/USD', 'LTC/USD', 'LTC/BTC']
+
+        # pairs = ['BTC/USD', 'BTC/EUR', 'BTC/ETH', 'ETH/USD', 'ETH/EUR', 'LTC/USD', 'LTC/EUR', 'BTC/LTC']
+
+    def get_data(self, exchange='Bitfinex', from_coin='BTC', to_coin='USD', limit=10000):
+        params = {
+            'fsym': from_coin,
+            'tsym': to_coin,
+            'e': exchange,
+            'limit': str(limit)
+        }
+        print 'Getting data for {} -> {}/{}...'.format(exchange, from_coin, to_coin)
+        response = requests.get('https://min-api.cryptocompare.com/data/histoday', params)
+        data = json.loads(response.content)['Data']
+        df = pd.DataFrame(data)
+        if len(df.columns) > len(df):
+            df = df.transpose()
+        return df
