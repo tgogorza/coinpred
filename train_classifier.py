@@ -1,4 +1,5 @@
 import numpy as np
+import keras
 from keras.models import Sequential
 from keras.callbacks import ReduceLROnPlateau
 from keras.layers import Dense, LSTM, Dropout, Activation, BatchNormalization, LeakyReLU
@@ -8,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, confusion_matrix, accuracy_score
 import matplotlib.pyplot as plt
 from dataretrievers import QuandlDataRetriever
-from transformers.classifier_preprocessor import ClassifierTransformer
+from transformers.classifier_preprocessor import ClassifierSimpleTransformer, ClassifierWindowTransformer
 
 np.random.seed(123456)
 EPOCHS = 300
@@ -20,28 +21,25 @@ WINDOW_SIZE = 7
 def create_lstm_classifier_model(input_dim):
     # create model
     model = Sequential()
-    model.add(LSTM(100, input_shape=(1, input_dim)))      # 42
-    model.add(Dropout(0.5))
-    # model.add(LSTM(10000))
-    # model.add(Dropout(0.5))
-    # model.add(LSTM(5000))
-    # model.add(Dropout(0.5))
-    # model.add(LSTM(1000))
-    # model.add(Dropout(0.5))
-    # model.add(LSTM(100))
-    # model.add(Dense(25))
-    # model.add(Dropout(0.2))
+    model.add(LSTM(100, input_shape=(1, input_dim), return_sequences=True))
+    # model.add(LSTM(32, return_sequences=True, stateful=True,
+    #                batch_input_shape=(BATCH_SIZE, timesteps, data_dim)))
+    model.add(LSTM(32, return_sequences=True))
+    model.add(LSTM(7))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
 
 def create_nn_classifier_model(input_dim):
     model = Sequential()
-    model.add(Dense(64, input_dim=input_dim, activity_regularizer=regularizers.l2(0.01)))
+    model.add(Dense(1000, input_dim=input_dim, activity_regularizer=regularizers.l2(0.01)))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dropout(0.5))
-    model.add(Dense(16, activity_regularizer=regularizers.l2(0.01)))
+    model.add(Dense(500, activity_regularizer=regularizers.l2(0.01)))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(Dense(100, activity_regularizer=regularizers.l2(0.01)))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dense(1))
@@ -52,12 +50,13 @@ def create_nn_classifier_model(input_dim):
 
 def create_pipeline():
 
-    preproc = ClassifierTransformer(window_size=WINDOW_SIZE)
+    # preproc = ClassifierSimpleTransformer()
+    preproc = ClassifierWindowTransformer(window_size=WINDOW_SIZE)
     steps = [
             ('preproc', preproc),
             # ('standardize', StandardScaler()),
             # ('lstm', KerasClassifier(build_fn=create_lstm_classifier_model, input_dim=preproc.num_features, epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=2))
-            ('mlp', KerasClassifier(build_fn=create_nn_classifier_model, input_dim=preproc.num_features, epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=2))
+            ('mlp', KerasClassifier(build_fn=create_lstm_classifier_model, input_dim=preproc.num_features, epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=2))
             ]
     model = Pipeline(steps)
     return model
@@ -90,7 +89,7 @@ def shape_data(data):
     X = data.drop([y_col], axis=1).values
     X.astype('float32')
     y = data[y_col].values.reshape(len(data), 1)
-    y.astype('float32')
+    # y.astype('float32')
 
     split = SPLIT
     train_size = int(len(data) * split)
@@ -109,9 +108,11 @@ def shape_data(data):
 
 def create_data_set():
     data = QuandlDataRetriever().get_data()
+    data = data.replace(0.0, np.NaN).ffill()
     data['rel_ret_tom'] = (data.close.shift(-1) - data.close) / data.close
     # data['log_ret_tomorrow'] = np.log(data['close'].shift(-1) / data['close'])
-    data['rise'] = data.rel_ret_tom.apply(lambda x: 1.0 if x > 0.0 else 0.0)
+    data['rise'] = data.rel_ret_tom.apply(lambda x: 1 if x > 0.0 else 0)
+    # data['rise'] = keras.utils.to_categorical(data['rise'], num_classes=2)
     data = data.drop('rel_ret_tom', axis=1)
     data = data.replace([np.inf, -np.inf], np.nan).dropna()
     # data = data.ffill().bfill()
