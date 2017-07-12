@@ -3,7 +3,7 @@ from stockstats import StockDataFrame
 import pandas as pd
 import numpy as np
 
-class ClassifierTransformer(TransformerMixin):
+class ClassifierWindowTransformer(TransformerMixin):
     def __init__(self, window_size=1):
         self.window_size = window_size
         # self.num_features = 70
@@ -172,8 +172,58 @@ class ClassifierTransformer(TransformerMixin):
 
         # mat = df.values
         mat = df2.values
-        # reshaped_mat = np.reshape(mat, (mat.shape[0], 1, mat.shape[-1]))  # LSTM
-        reshaped_mat = np.reshape(mat, (mat.shape[0], mat.shape[-1]))  # NN
+        reshaped_mat = np.reshape(mat, (mat.shape[0], 1, mat.shape[-1]))  # LSTM
+        # reshaped_mat = np.reshape(mat, (mat.shape[0], mat.shape[-1]))  # NN
+        return reshaped_mat
+
+    def fit(self, *_):
+        return self
+
+
+class ClassifierSimpleTransformer(TransformerMixin):
+    def __init__(self):
+        self.num_features = 38
+
+    def transform(self, X, *_):
+
+        if type(X) is np.ndarray:
+            df = pd.DataFrame(X)
+        else:
+            df = X.copy()
+
+        df.columns = ['open', 'high', 'low', 'close', 'volbtc', 'volusd', 'weighted_price']
+        df = StockDataFrame.retype(df)
+
+        df['rsi_5']
+        df['rsi_10']
+        df['rsi_15']
+        df['macd']
+        df['macds']
+        df['macdh']
+        df['cr']
+        df['cr-ma1']
+        df['cr-ma2']
+        df['cr-ma3']
+        df['close_8_sma']
+        df['close_15_sma']
+        df['close_30_sma']
+        df['close_50_sma']
+        df['close_8_ema']
+        df['close_15_ema']
+        df['close_30_ema']
+        df['close_50_ema']
+        df['boll']
+        df['boll_ub']
+        df['boll_lb']
+
+        # Fill NAs
+        df = df.ffill().bfill()
+
+        self.num_features = df.shape[-1]
+
+        mat = df.values
+        reshaped_mat = np.reshape(mat, (mat.shape[0], 1, mat.shape[-1]))  # LSTM
+        # reshaped_mat = np.reshape(mat, (mat.shape[0], mat.shape[-1]))  # NN
         return reshaped_mat
 
     def fit(self, *_):
